@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Vendas e Comissões | Ammo 360</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 overflow-x-hidden">
+
+    <header class="bg-slate-900 text-white p-4 md:p-6 shadow-md">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2 md:gap-4">
+            <div class="text-center md:text-left">
+                <h1 class="text-xl md:text-2xl font-bold tracking-wide">ÓTICAS AMMO <span class="text-blue-400 font-light">ADMIN</span></h1>
+                <p class="text-slate-400 text-xs md:text-sm mt-1">Gestão de Pagamentos e Comissões</p>
+            </div>
+            <div class="text-center md:text-right mt-2 md:mt-0 bg-slate-800 md:bg-transparent px-4 py-2 rounded-lg md:p-0">
+                <p class="text-xs text-slate-400">Última atualização</p>
+                <p id="dataSincronismo" class="font-medium text-blue-300 text-sm">Sincronizando...</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-6xl mx-auto p-4 md:p-6 mt-2">
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6 md:mb-8">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 flex items-center justify-between">
+                <div>
+                    <h2 class="text-gray-500 font-medium text-xs md:text-sm uppercase tracking-wider">Volume de Vendas (Ativas)</h2>
+                    <p id="valTotalVendas" class="text-2xl md:text-4xl font-bold text-slate-800 mt-1 md:mt-2">R$ 0,00</p>
+                </div>
+                <div class="bg-blue-50 p-3 md:p-4 rounded-full">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6 flex items-center justify-between border-l-4 border-l-orange-500">
+                <div>
+                    <h2 class="text-gray-500 font-medium text-xs md:text-sm uppercase tracking-wider">Comissões a Pagar</h2>
+                    <p id="valTotalComissoes" class="text-2xl md:text-4xl font-bold text-orange-600 mt-1 md:mt-2">R$ 0,00</p>
+                </div>
+                <div class="bg-orange-50 p-3 md:p-4 rounded-full">
+                    <svg class="w-6 h-6 md:w-8 md:h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-6 md:mb-8">
+            <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Distribuição de Vendas por Loja</h3>
+                <div class="relative h-64 md:h-80 w-full">
+                    <canvas id="graficoLojas"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+                <h3 class="text-base md:text-lg font-bold text-gray-800 mb-4 border-b pb-2">Meios de Pagamento</h3>
+                <div class="relative h-64 w-full flex justify-center">
+                    <canvas id="graficoPagamentos"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-0 overflow-hidden">
+            <div class="p-4 md:p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                <div>
+                    <h3 class="text-base md:text-lg font-bold text-gray-800">Ranking da Equipe (Top 10)</h3>
+                    <p class="text-xs md:text-sm text-gray-500">Volume de vendas e comissões individuais</p>
+                </div>
+            </div>
+            <div class="overflow-x-auto no-scrollbar">
+                <table class="w-full text-left border-collapse text-sm md:text-base">
+                    <thead class="bg-slate-800 text-white">
+                        <tr>
+                            <th class="p-4 border-b">Consultor / Gerente</th>
+                            <th class="p-4 border-b text-right">Total Vendido</th>
+                            <th class="p-4 border-b text-right text-orange-300">Comissão Projetada</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listaVendedores" class="divide-y divide-gray-100">
+                        <tr><td colspan="3" class="p-6 text-center text-gray-400">Carregando dados da equipe...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ==========================================
+        // COLE A URL DO SEU GOOGLE APPS SCRIPT AQUI
+        // ==========================================
+        const URL_WEB_APP = "https://script.google.com/macros/s/AKfycbxmIjJwvL06ylZbB8hzCO379GGOh_2-5dlo1YyMvAVFoqspt4vPHl8xuvOOwKyNYoRfcA/exec"; 
+
+        const paletaLojas = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#6366f1', '#14b8a6'];
+        const paletaPgtos = ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'];
+
+       async function iniciarAdmin() {
+            try {
+                // Checa se você esqueceu de colocar a URL
+                if (URL_WEB_APP.includes("COLE_AQUI")) {
+                    throw new Error("Você esqueceu de colar o link do Apps Script no código HTML!");
+                }
+
+                const resposta = await fetch(URL_WEB_APP);
+                const dados = await resposta.json();
+
+                if (dados.erro) {
+                    throw new Error("Erro retornado pela planilha: " + dados.erro);
+                }
+                
+                atualizarTela(dados);
+                
+            } catch (erro) {
+                console.error("Erro detalhado:", erro);
+                
+                // Mostra o erro visualmente no painel em vermelho
+                const aviso = document.getElementById('dataSincronismo');
+                aviso.innerText = "Falha na conexão!";
+                aviso.classList.remove("text-blue-300");
+                aviso.classList.add("text-red-500", "font-bold");
+                
+                alert("Ocorreu um erro: " + erro.message + "\n\nVerifique se a Implantação do Google Apps Script está configurada para acesso de 'Qualquer pessoa'.");
+            }
+        }
+
+        function atualizarTela(dados) {
+            document.getElementById('dataSincronismo').innerText = dados.dataSincronismo;
+            document.getElementById('valTotalVendas').innerText = formatarMoeda(dados.resumo.totalVendas);
+            document.getElementById('valTotalComissoes').innerText = formatarMoeda(dados.resumo.totalComissoes);
+
+            renderizarTabelaVendedores(dados.graficos.rankingVendedores);
+            renderizarGraficoLojas(dados.graficos.lojas);
+            renderizarGraficoPagamentos(dados.graficos.pagamentos);
+        }
+
+        function renderizarTabelaVendedores(vendedores) {
+            const tbody = document.getElementById('listaVendedores');
+            tbody.innerHTML = ''; 
+
+            if (vendedores.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="3" class="p-6 text-center text-gray-500 italic">Nenhum dado encontrado.</td></tr>`;
+                return;
+            }
+
+            vendedores.forEach(vend => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition-colors";
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-700">${vend.nome}</td>
+                    <td class="p-4 text-right font-bold text-slate-600">${formatarMoeda(vend.vendas)}</td>
+                    <td class="p-4 text-right font-bold text-orange-500">${formatarMoeda(vend.comissao)}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderizarGraficoLojas(dadosLojas) {
+            const lojasOrdenadas = Object.keys(dadosLojas).sort((a, b) => dadosLojas[b] - dadosLojas[a]);
+            const valores = lojasOrdenadas.map(loja => dadosLojas[loja]);
+            const ctx = document.getElementById('graficoLojas').getContext('2d');
+            const isMobile = window.innerWidth < 768;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: lojasOrdenadas,
+                    datasets: [{
+                        label: 'Vendas Brutas',
+                        data: valores,
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: isMobile ? 'y' : 'x', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function renderizarGraficoPagamentos(dadosPgtos) {
+            const pgtos = Object.keys(dadosPgtos);
+            const valores = pgtos.map(p => dadosPgtos[p]);
+            const ctx = document.getElementById('graficoPagamentos').getContext('2d');
+
+            new Chart(ctx, {
+                type: 'doughnut', // Gráfico de Rosca para os meios de pagamento
+                data: {
+                    labels: pgtos,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: paletaPgtos,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function formatarMoeda(valor) {
+            return (valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        iniciarAdmin();
+    </script>
+</body>
+</html>
